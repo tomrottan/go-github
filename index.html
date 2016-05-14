@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <title>Go-GitHub by tomrottan</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>Go-GitHub</h1>
+        <h2>Go library for accessing the GitHub API</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/tomrottan/go-github/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/tomrottan/go-github/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/tomrottan/go-github" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h1>
+<a id="go-github" class="anchor" href="#go-github" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>go-github</h1>
+
+<p>go-github is a Go client library for accessing the <a href="https://developer.github.com/v3/">GitHub API</a>.</p>
+
+<p><strong>Documentation:</strong> <a href="https://godoc.org/github.com/google/go-github/github"><img src="https://godoc.org/github.com/google/go-github/github?status.svg" alt="GoDoc"></a><br>
+<strong>Mailing List:</strong> <a href="https://groups.google.com/group/go-github">go-github@googlegroups.com</a><br>
+<strong>Build Status:</strong> <a href="https://travis-ci.org/google/go-github"><img src="https://travis-ci.org/google/go-github.svg?branch=master" alt="Build Status"></a><br>
+<strong>Test Coverage:</strong> <a href="https://coveralls.io/r/google/go-github?branch=master"><img src="https://coveralls.io/repos/google/go-github/badge.svg?branch=master" alt="Test Coverage"></a> (<a href="https://drone.io/github.com/google/go-github/files/coverage.html">gocov report</a>)</p>
+
+<p>go-github requires Go version 1.4 or greater.</p>
+
+<h2>
+<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">import</span> <span class="pl-s"><span class="pl-pds">"</span>github.com/google/go-github/github<span class="pl-pds">"</span></span></pre></div>
+
+<p>Construct a new GitHub client, then use the various services on the client to
+access different parts of the GitHub API.  For example, to list all
+organizations for user "willnorris":</p>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-smi">client</span> <span class="pl-k">:=</span> github.<span class="pl-c1">NewClient</span>(<span class="pl-c1">nil</span>)
+<span class="pl-smi">orgs</span>, <span class="pl-smi">_</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> client.<span class="pl-smi">Organizations</span>.<span class="pl-c1">List</span>(<span class="pl-s"><span class="pl-pds">"</span>willnorris<span class="pl-pds">"</span></span>, <span class="pl-c1">nil</span>)</pre></div>
+
+<p>Some API methods have optional parameters that can be passed.  For example,
+to list public repositories for the "github" organization:</p>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-smi">client</span> <span class="pl-k">:=</span> github.<span class="pl-c1">NewClient</span>(<span class="pl-c1">nil</span>)
+<span class="pl-smi">opt</span> <span class="pl-k">:=</span> &amp;github.<span class="pl-smi">RepositoryListByOrgOptions</span>{Type: <span class="pl-s"><span class="pl-pds">"</span>public<span class="pl-pds">"</span></span>}
+<span class="pl-smi">repos</span>, <span class="pl-smi">_</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> client.<span class="pl-smi">Repositories</span>.<span class="pl-c1">ListByOrg</span>(<span class="pl-s"><span class="pl-pds">"</span>github<span class="pl-pds">"</span></span>, opt)</pre></div>
+
+<h3>
+<a id="authentication" class="anchor" href="#authentication" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Authentication</h3>
+
+<p>The go-github library does not directly handle authentication.  Instead, when
+creating a new client, pass an <code>http.Client</code> that can handle authentication for
+you.  The easiest and recommended way to do this is using the <a href="https://github.com/golang/oauth2">oauth2</a>
+library, but you can always use any other library that provides an
+<code>http.Client</code>.  If you have an OAuth2 access token (for example, a <a href="https://github.com/blog/1509-personal-api-tokens">personal
+API token</a>), you can use it with oauth2 using:</p>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">main</span>() {
+  <span class="pl-smi">ts</span> <span class="pl-k">:=</span> oauth2.<span class="pl-c1">StaticTokenSource</span>(
+    &amp;oauth2.<span class="pl-smi">Token</span>{AccessToken: <span class="pl-s"><span class="pl-pds">"</span>... your access token ...<span class="pl-pds">"</span></span>},
+  )
+  <span class="pl-smi">tc</span> <span class="pl-k">:=</span> oauth2.<span class="pl-c1">NewClient</span>(oauth2.<span class="pl-smi">NoContext</span>, ts)
+
+  <span class="pl-smi">client</span> <span class="pl-k">:=</span> github.<span class="pl-c1">NewClient</span>(tc)
+
+  <span class="pl-c">// list all repositories for the authenticated user</span>
+  <span class="pl-smi">repos</span>, <span class="pl-smi">_</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> client.<span class="pl-smi">Repositories</span>.<span class="pl-c1">List</span>(<span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>, <span class="pl-c1">nil</span>)
+}</pre></div>
+
+<p>See the <a href="https://godoc.org/golang.org/x/oauth2">oauth2 docs</a> for complete instructions on using that library.</p>
+
+<p>For API methods that require HTTP Basic Authentication, use the
+<a href="https://godoc.org/github.com/google/go-github/github#BasicAuthTransport"><code>BasicAuthTransport</code></a>.</p>
+
+<h3>
+<a id="pagination" class="anchor" href="#pagination" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Pagination</h3>
+
+<p>All requests for resource collections (repos, pull requests, issues, etc)
+support pagination. Pagination options are described in the
+<code>github.ListOptions</code> struct and passed to the list methods directly or as an
+embedded type of a more specific list options struct (for example
+<code>github.PullRequestListOptions</code>).  Pages information is available via
+<code>github.Response</code> struct.</p>
+
+<div class="highlight highlight-source-go"><pre><span class="pl-smi">client</span> <span class="pl-k">:=</span> github.<span class="pl-c1">NewClient</span>(<span class="pl-c1">nil</span>)
+<span class="pl-smi">opt</span> <span class="pl-k">:=</span> &amp;github.<span class="pl-smi">RepositoryListByOrgOptions</span>{
+  <span class="pl-v">Type</span>: <span class="pl-s"><span class="pl-pds">"</span>public<span class="pl-pds">"</span></span>,
+  <span class="pl-v">ListOptions</span>: github.<span class="pl-smi">ListOptions</span>{PerPage: <span class="pl-c1">10</span>, Page: <span class="pl-c1">2</span>},
+}
+<span class="pl-smi">repos</span>, <span class="pl-smi">resp</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> client.<span class="pl-smi">Repositories</span>.<span class="pl-c1">ListByOrg</span>(<span class="pl-s"><span class="pl-pds">"</span>github<span class="pl-pds">"</span></span>, opt)
+fmt.<span class="pl-c1">Println</span>(resp.<span class="pl-smi">NextPage</span>) <span class="pl-c">// outputs 3</span></pre></div>
+
+<p>For complete usage of go-github, see the full <a href="https://godoc.org/github.com/google/go-github/github">package docs</a>.</p>
+
+<h3>
+<a id="integration-tests" class="anchor" href="#integration-tests" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Integration Tests</h3>
+
+<p>You can run integration tests from the <code>tests</code> directory. See the integration tests <a href="tests/README.md">README</a>.</p>
+
+<h2>
+<a id="roadmap" class="anchor" href="#roadmap" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Roadmap</h2>
+
+<p>This library is being initially developed for an internal application at
+Google, so API methods will likely be implemented in the order that they are
+needed by that application.  You can track the status of implementation in
+<a href="https://docs.google.com/spreadsheet/ccc?key=0ApoVX4GOiXr-dGNKN1pObFh6ek1DR2FKUjBNZ1FmaEE&amp;usp=sharing">this Google spreadsheet</a>.  Eventually, I would like to cover the entire
+GitHub API, so contributions are of course <a href="CONTRIBUTING.md">always welcome</a>.  The
+calling pattern is pretty well established, so adding new methods is relatively
+straightforward.</p>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+
+<p>This library is distributed under the BSD-style license found in the <a href="./LICENSE">LICENSE</a>
+file.</p>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
